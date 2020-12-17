@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+
+node:
+build:
+context: ./node
+args:
+- NODE_VERSION=latest
+- PROJECT_PATH=/opt/app/
+- NODE_ENV=production
+- YARN=false
+volumes:
+- ../:/opt/app
+entrypoint: run-nodock "node index.js"
+tty: true
+
+
+# Define the services/containers to be run
+services:
+angular: # name of the first service
+build: # specify the directory of the Dockerfile
+context: ./frontend
+dockerfile: debug.dockerfile
+container_name: mean_angular
+volumes:
+- ./frontend:/frontend
+- /frontend/node_modules
+ports:
+- "4200:4200" # specify port forewarding
+- "49153:49153"
+environment:
+- NODE_ENV=dev
+
+nginx:
+build:
+context: ./nginx
+args:
+- WEB_REVERSE_PROXY_PORT=8000
+- WEB_SSL=false
+- SELF_SIGNED=false
+- NO_DEFAULT=false
+volumes:
+- ./data/logs/nginx/:/var/log/nginx
+- ./certbot/certs/:/var/certs
+ports:
+- "80:80"
+- "443:443"
+tty: true
